@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+.next/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+.codex/
+.playwright-cli/
+*.tsbuildinfo
+.vercel

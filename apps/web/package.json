@@ -1,0 +1,25 @@
+{
+  "name": "@nightshift/web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "OpenShell NightShift web app",
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "pnpm --filter @nightshift/common build",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^16.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@nightshift/common": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.0"
+  }
+}

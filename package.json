@@ -1,0 +1,41 @@
+{
+  "name": "openshell-nightshift",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Midnight-native privacy-first task marketplace built from OpenShell assets",
+  "engines": {
+    "node": ">=20 <26"
+  },
+  "packageManager": "pnpm@10.6.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "plan": "echo 'Read ARCHITECTURE.md and docs/BETA_ROLLOUT_PLAN.md'",
+    "dev:api": "pnpm --filter @nightshift/api dev",
+    "dev:web": "pnpm build:common && pnpm --filter @nightshift/web dev",
+    "dev:common": "pnpm --filter @nightshift/common dev",
+    "dev:worker": "pnpm --filter @nightshift/worker dev",
+    "serve:beta": "node scripts/serve-beta.mjs",
+    "start:api": "pnpm --filter @nightshift/api start",
+    "start:web": "pnpm --filter @nightshift/web start",
+    "start:worker": "pnpm --filter @nightshift/worker start",
+    "build": "pnpm -r build",
+    "build:api": "pnpm --filter @nightshift/api build",
+    "build:web": "pnpm build:common && pnpm --filter @nightshift/web build",
+    "build:worker": "pnpm --filter @nightshift/worker build",
+    "build:common": "pnpm --filter @nightshift/common build",
+    "typecheck": "pnpm build:common && pnpm --filter @nightshift/api typecheck && pnpm --filter @nightshift/web typecheck && pnpm --filter @nightshift/worker typecheck",
+    "typecheck:api": "pnpm --filter @nightshift/api typecheck",
+    "typecheck:web": "pnpm --filter @nightshift/web typecheck",
+    "typecheck:worker": "pnpm --filter @nightshift/worker typecheck",
+    "typecheck:common": "pnpm --filter @nightshift/common typecheck",
+    "simulate:compact": "python3 contracts/compact/simulate_state_machine.py",
+    "verify": "pnpm typecheck && pnpm build && pnpm simulate:compact",
+    "smoke:api": "node scripts/smoke-api.mjs",
+    "beta:setup": "node scripts/beta-setup.mjs",
+    "beta": "node scripts/beta.mjs",
+    "beta:check": "node scripts/beta-check.mjs"
+  }
+}
