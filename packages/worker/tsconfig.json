@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "paths": {
+      "@nightshift/common": ["../common/src/index.ts"]
+    },
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../common" }],
+  "exclude": ["dist", "node_modules"]
+}

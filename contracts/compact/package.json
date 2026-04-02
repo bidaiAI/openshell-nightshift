@@ -1,0 +1,9 @@
+{
+  "name": "@nightshift/compact",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phase-1 Midnight Compact contract scaffold for OpenShell NightShift",
+  "scripts": {
+    "simulate": "python3 simulate_state_machine.py"
+  }
+}

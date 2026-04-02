@@ -1,0 +1,149 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// Phase-1 contract scaffold for OpenShell NightShift.
+// This file focuses on the public lifecycle / commitment state machine first.
+// Token movement integration is intentionally left as the next layer once the
+// exact Midnight token/payment primitives are wired in and compiler-verified.
+
+export enum TaskPhase {
+  UNINITIALIZED,
+  OPEN,
+  ASSIGNED,
+  SUBMITTED,
+  SETTLED,
+  DISPUTED,
+  CANCELLED
+}
+
+export ledger phase: TaskPhase;
+export ledger sequence: Counter;
+
+export ledger ownerKey: Bytes<32>;
+export ledger workerKey: Bytes<32>;
+
+export ledger taskCommitment: Bytes<32>;
+export ledger rewardCommitment: Bytes<32>;
+export ledger winningBidCommitment: Bytes<32>;
+export ledger receiptCommitment: Bytes<32>;
+
+constructor() {
+  phase = TaskPhase.UNINITIALIZED;
+  sequence.increment(1);
+
+  ownerKey = pad(32, "nightshift:none:owner");
+  workerKey = pad(32, "nightshift:none:worker");
+
+  taskCommitment = pad(32, "nightshift:none:task");
+  rewardCommitment = pad(32, "nightshift:none:reward");
+  winningBidCommitment = pad(32, "nightshift:none:bid");
+  receiptCommitment = pad(32, "nightshift:none:receipt");
+}
+
+witness ownerSecretKey(): Bytes<32>;
+witness workerSecretKey(): Bytes<32>;
+
+circuit deriveOwnerKey(): Bytes<32> {
+  return persistentHash(
+    disclose(publicKey(secp256k1, ownerSecretKey())),
+    pad(32, "nightshift:owner")
+  );
+}
+
+circuit deriveWorkerKey(): Bytes<32> {
+  return persistentHash(
+    disclose(publicKey(secp256k1, workerSecretKey())),
+    pad(32, "nightshift:worker")
+  );
+}
+
+circuit assertOwner(): [] {
+  assert(ownerKey == deriveOwnerKey(), "nightshift:not-owner");
+}
+
+circuit assertSelectedWorker(): [] {
+  assert(workerKey == deriveWorkerKey(), "nightshift:not-worker");
+}
+
+circuit clearSelection(): [] {
+  workerKey = pad(32, "nightshift:none:worker");
+  winningBidCommitment = pad(32, "nightshift:none:bid");
+  receiptCommitment = pad(32, "nightshift:none:receipt");
+}
+
+export circuit createTask(
+  nextTaskCommitment: Bytes<32>,
+  nextRewardCommitment: Bytes<32>
+): [] {
+  assert(
+    phase == TaskPhase.UNINITIALIZED || phase == TaskPhase.CANCELLED,
+    "nightshift:task-already-open"
+  );
+
+  ownerKey = disclose(deriveOwnerKey());
+  taskCommitment = disclose(nextTaskCommitment);
+  rewardCommitment = disclose(nextRewardCommitment);
+
+  clearSelection();
+  phase = TaskPhase.OPEN;
+  sequence.increment(1);
+}
+
+export circuit selectBid(
+  nextBidCommitment: Bytes<32>,
+  nextWorkerKey: Bytes<32>
+): [] {
+  assert(phase == TaskPhase.OPEN, "nightshift:task-not-open");
+  assertOwner();
+
+  winningBidCommitment = disclose(nextBidCommitment);
+  workerKey = disclose(nextWorkerKey);
+  receiptCommitment = pad(32, "nightshift:none:receipt");
+
+  phase = TaskPhase.ASSIGNED;
+  sequence.increment(1);
+}
+
+export circuit submitReceipt(
+  nextReceiptCommitment: Bytes<32>
+): [] {
+  assert(phase == TaskPhase.ASSIGNED, "nightshift:task-not-assigned");
+  assertSelectedWorker();
+
+  receiptCommitment = disclose(nextReceiptCommitment);
+  phase = TaskPhase.SUBMITTED;
+  sequence.increment(1);
+}
+
+export circuit acceptReceiptAndSettle(): [] {
+  assert(phase == TaskPhase.SUBMITTED, "nightshift:receipt-not-submitted");
+  assertOwner();
+
+  // TODO(midnight-payments): connect this transition to actual escrow release.
+  phase = TaskPhase.SETTLED;
+  sequence.increment(1);
+}
+
+export circuit raiseDispute(): [] {
+  assert(
+    ownerKey == deriveOwnerKey() || workerKey == deriveWorkerKey(),
+    "nightshift:not-dispute-party"
+  );
+  assert(
+    phase == TaskPhase.ASSIGNED || phase == TaskPhase.SUBMITTED,
+    "nightshift:dispute-not-available"
+  );
+
+  phase = TaskPhase.DISPUTED;
+  sequence.increment(1);
+}
+
+export circuit cancelOpenTask(): [] {
+  assert(phase == TaskPhase.OPEN, "nightshift:cancel-not-available");
+  assertOwner();
+
+  clearSelection();
+  phase = TaskPhase.CANCELLED;
+  sequence.increment(1);
+}
